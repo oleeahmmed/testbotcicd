@@ -1,0 +1,42 @@
+name: Deploy Python Bot to VPS
+
+# কখন রান করবে
+on:
+  push:
+    branches:
+      - main  # main branch এ push হলে ডিপ্লয় হবে
+
+# কাজের ধাপ
+jobs:
+  deploy:
+    name: SSH Deploy Job
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📦 Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: 🚀 SSH into VPS and Deploy
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.VPS_HOST }}       # তোমার VPS IP
+        username: ${{ secrets.VPS_USER }}   # VPS ইউজার (সাধারণত root)
+        key: ${{ secrets.VPS_KEY }}         # Private SSH Key (id_rsa)
+        port: 22
+        script: |
+          echo "📁 Moving to project directory..."
+          cd ~/erp
+
+          echo "🔄 Pulling latest code..."
+          git pull origin main
+
+          echo "🐍 Activating virtual environment..."
+          source venv/bin/activate
+
+          echo "📦 Installing dependencies..."
+          pip install -r requirements.txt
+
+          echo "▶️ Running Python bot..."
+          python main.py
+
+          echo "✅ Deployment completed successfully!"
